@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="/public/main.css">
+    <title>Hello, world!</title>
+  </head>
+  <body>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.js" ></script>
+  <%- include('nav.html') %>
+
+  <h4 class="ml-2 my-3 text-center">할일 리스트</h4>
+
+  <div class="container input-group mb-2">
+    <input class="form-control" id="search-input">
+    <button class="input-group-append btn btn-danger" id="search">검색</button>
+  </div>
+
+  <script>
+    $('#search').click(function(){
+      // search-input 에 입력한 값 
+      var input_value = $('#search-input').val();
+      window.location.replace('/search?value='+input_value);
+    });
+  </script>
+
+  <div class="container">
+    <ul class="list-group">
+      <% for(var i=0; i<posts.length; i++){%>
+          <li class="list-group-item">
+            <p>글번호 : <%= posts[i]._id %></p>
+            <h4><a href="/detail/<%= posts[i]._id %>">할일 제목 : <%= posts[i].제목 %></a></h4>
+            <p>할일 마감날짜 : <%= posts[i].날짜 %></p>
+            <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">삭제</button>
+            <button class="btn btn-secondary chat" data-id="<%= posts[i].작성자 %>">채팅</button>
+          </li>      
+      <%}%>
+    </ul> 
+  </div>
+   
+  <script>
+    $('.delete').click(function(e){
+      console.log('test');
+      // e.target : 누른 요소, dataset.id : data-id
+      var postNo = e.target.dataset.id;
+      var element = $(this)
+      console.log(postNo);
+      $.ajax({
+        method : 'DELETE',
+        url : '/delete',
+        data : {_id : postNo}
+      }).done(function(result){
+        console.log('성공했습니다.');
+        element.parent('li').fadeOut();
+      }).fail(function(xhr, textStatus, errorThrown){
+        // textStatus : 응답 코드 , errorThrown : 에러 메세지
+        console.log('실패')
+      });
+    });
+
+    $('.chat').click(function(e){
+      var id = e.target.dataset.id;
+      $.post('/chatroom', {chattedId : id}).then(()=>{
+        console.log('성공');
+      });
+    });
+  </script>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>
