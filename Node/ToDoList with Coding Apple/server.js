@@ -43,7 +43,7 @@ app.get('/', function(req, res){
 });
 
 app.get('/write', function(req,res){
-    res.render(__dirname+'/views/write.ejs');
+    res.render('write.ejs');
 });
 
 
