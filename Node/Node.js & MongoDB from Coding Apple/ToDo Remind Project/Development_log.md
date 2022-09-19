@@ -283,3 +283,86 @@ totalPost는 ToDo 총 갯수이므로, 입력받은 데이터는 총 갯수 + 1 
 마지막으로, 방금 추가한 데이터로 인해 ToDo 총 갯수가 +1 되었으므로, $inc 를 활용하여 totalPost 값을 1 증가시켰다.
 
 모든 작업을 완료하고, 사용자는 list를 보고 싶어할 것으로 생각하여 /list로 리다이렉트 했다.
+
+### JQuery fadeOut() 안되는 현상
+
+```
+<div class="test1">
+    <button class="test">test</button>
+</div>
+
+<script>
+    $(".test").click((e)=>{
+        let elem = $(this);
+        console.log(elem);
+        elem.parent('div').fadeOut();
+    })
+</script>
+```
+
+할일 삭제를 동적으로 보여주기 위해, Ajax와 JQuery를 활용하여 사라질 데이터를 fade out 시키기로 했다.
+
+그러나 강의와 유사한 코드를 작성했음에도, fade out이 동작하지 않는 현상을 보았다.
+
+시도 1 : elem.parent('div') 를 찾지 못했을 것이라 예상
+
+처음에는 elem.parent('div') 를 찾지 못하는 것으로 생각하여, parent 대신 parents('클래스명') 혹은 closest('클래스명') 을 시도했으나 fade out은 동작하지 않았다.
+
+시도 2 : elem = $(this) 가 작동하지 않았을 것이라 예상
+
+삭제 버튼이 선택된 할일만 삭제해야 했기 때문에 this 사용을 필수적이었다.
+
+그러나 console.log 를 통한 $(this) 출력 결과, 선택한 버튼이 나오지 않은 것으로 확인했다.
+
+수차례 구글링한 결과 문제점의 원인을 발견하였다.
+
+발견한 글에 의하면,
+
+"An arrow function expression has a shorter syntax than a function expression and does not have its own this, arguments, super, or new.target."
+
+즉, ()=>{} 형태의 함수에는 this, arguments, super, new.target을 사용할 수 없다는 것이다.
+
+위의 코드는 콜백함수로 arrow function을 사용했기 때문에 this가 비어있는 값으로 된 것이다.
+
+결론적으로 2가지 수정안을 고려해보았다.
+
+- 1안
+
+  ```
+  <div "test1">
+      <button class="test">test</button>
+  </div>
+
+  <script>
+      $(".test").click(function(e){
+          let elem = $(this);
+          elem.parent('div').fadeOut();
+      })
+  </script>
+  ```
+
+- 2안
+
+  ```
+  <div class="test1">
+      <button class="test">test</button>
+  </div>
+
+  <script>
+      $(".test").click((e)=>{
+          $(e.target).parent('div').fadeOut();
+      })
+  </script>
+  ```
+
+1안을 선택한다면, $(this)를 사용할 수 있는 function(){} 형태의 콜백 함수를 사용할 것이고,
+
+2안을 선택한다면, arrow function을 사용하는 대신, parameter로 받은 e(Event 객체)로 e.target에 접근하여, 버튼을 선택할 것이다.
+
+이번 오류 수정으로 function(){} 와 arrow function 사이의 차이점을 알 수 있었다.
+
+기존에는 단순히 표기법의 단순화라고 생각했지만, 사실상, function(){} 형태가 더 많은 정보를 담고 있었고, arrow function은 가벼운 대신 this, arguments, super 등을 사용할 수 없다는 점이 있었다.
+
+this, super 등을 사용하는 경우가 많은데, 이 때 조심히 사용해야할 것 같다.
+
+무조건 새로운 표기법만이 좋은 것은 아니라는 생각을 했다.
