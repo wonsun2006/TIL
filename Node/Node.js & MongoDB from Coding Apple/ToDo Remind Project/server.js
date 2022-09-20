@@ -3,12 +3,19 @@ const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
 require('dotenv').config();
+var passport = require('passport');
+var LocalStrategy = require('passport-local');
+var crypto = require('crypto');
+
+const authRouter = require('./routes/auth');
 
 const app = express();
 
 app.use(bodyParser.urlencoded({extended : true}));
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
+
+app.use('/auth', authRouter);
 
 let db;
 
@@ -76,3 +83,4 @@ app.delete('/delete', (req, res)=>{
         }
     });
 })
+
