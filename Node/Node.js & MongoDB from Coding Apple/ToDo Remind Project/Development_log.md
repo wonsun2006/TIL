@@ -222,6 +222,8 @@ posts를 DB에서 가져온대로 출력은 성공적이었다.
 
 여기서는 기존에 사용하던 post 라는 collection을 그대로 사용하였지만, 이후 todo라는 collection을 추가하여 더 많은 정보를 담을 계획이다.
 
+<br>
+
 ### 할일 추가 기능 구현
 
 추가 기능은 버튼을 통해 작성 폼으로 넘어가고, 제출 버튼 클릭 시 DB에 추가하는 로직을 구성하였다.
@@ -283,6 +285,8 @@ totalPost는 ToDo 총 갯수이므로, 입력받은 데이터는 총 갯수 + 1 
 마지막으로, 방금 추가한 데이터로 인해 ToDo 총 갯수가 +1 되었으므로, $inc 를 활용하여 totalPost 값을 1 증가시켰다.
 
 모든 작업을 완료하고, 사용자는 list를 보고 싶어할 것으로 생각하여 /list로 리다이렉트 했다.
+
+<br>
 
 ### JQuery fadeOut() 안되는 현상
 
@@ -366,3 +370,91 @@ totalPost는 ToDo 총 갯수이므로, 입력받은 데이터는 총 갯수 + 1 
 this, super 등을 사용하는 경우가 많은데, 이 때 조심히 사용해야할 것 같다.
 
 무조건 새로운 표기법만이 좋은 것은 아니라는 생각을 했다.
+
+<br>
+
+### 회원가입 구현
+
+로그인 관련 기능들은 router로 auth라는 이름으로 관리하기로 했다.
+
+```
+const authRouter = require('./routes/auth');
+app.use('/auth', authRouter);
+```
+
+./routes/auth.js 에는 Express.Router 객체를 export 하였고, 그 안에서 로그인 관련 기능을 구현했다.
+
+로그인 관련 기능에는 DB 접근이 필수적이었는데, DB객체는 server.js에 있었다.
+
+server.js 의 db 변수를 가져오려 시도했지만 실패하고, auth.js에 새로 DB 객체를 선언하기로 했다.
+
+```
+const MongoClient = require('mongodb').MongoClient;
+
+let db;
+
+MongoClient.connect(process.env.DB_URL, (error, client)=>{
+    if (error) return console.log(error);
+    db = client.db('todoapp');
+});
+```
+
+그 뒤로 로그인을 위한 라우팅과 회원가입을 위한 라우팅을 설정했다.
+
+```
+router.get('/login', (req,res)=>{
+    res.render('login.ejs');
+});
+
+router.get('/register-form', (req,res)=>{
+    res.render('register-form.ejs');
+});
+
+router.post('/register', (req,res)=>{
+    if(req.body.password != req.body.passwordcheck){
+        res.write('<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>');
+        res.write("<script>alert('비밀번호 확인이 틀렸습니다.')</script>");
+        res.write("<script>window.location=\"/auth/register-form\"</script>");
+    }else{
+        let insertData = {
+            id : req.body.id,
+            pw : req.body.password
+        }
+        db.collection('login').findOne({id:insertData.id}, (error, result)=>{
+            if(error){
+                console.log(error);
+                return false;
+            }
+            if(!result){
+                db.collection('login').insertOne(insertData, (error, result)=>{
+                    if(error){
+                        console.log(error);
+                        alert(error);
+                        res.redirect('/register-form');
+                    }
+                    res.write('<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>');
+                    res.write("<script>alert('회원가입이 완료되었습니다.')</script>");
+                    res.write("<script>window.location=\"/auth/login\"</script>");
+                });
+            }else{
+                res.write('<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>');
+                res.write("<script>alert('중복된 아이디입니다.')</script>");
+                res.write("<script>window.location=\"/auth/register-form\"</script>");
+            }
+
+        });
+    }
+});
+```
+
+로그인은 그저 페이지만 띄우기로 했고, 로그인 페이지 안에 회원가입 버튼을 만들었다.
+
+회원가입 버튼을 누르면 회원가입 페이지로 넘어가고, 그 안에 정보를 입력하면 회원가입이 된다.
+
+회원가입 시, 보통 ID 중복을 막고, 비밀번호와 비밀번호 확인란의 일치 여부를 확인하기 때문에, DB 접근하는 함수의 콜백 함수로 그 기능들을 구현하였다.
+
+이 과정에서 res.write로 javascript 함수를 사용하는데, 이는 브라우저에 경고창을 띄우고 리다이렉트를 하기 위함이다.
+
+특히, 한글을 경고창에 띄울 때, UTF-8 인코딩이 안되는데, 그를 위한 처리를 html `<head>` 에 해주어야 한다.
+
+또한, res.write를 해버려서 res.redirect가 되지 않기에, javascript 함수로 redirect 했다.
