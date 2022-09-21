@@ -11,7 +11,7 @@
     <title>To Do List</title>
   </head>
   <body>
-    <%- include('nav-bar.html') %>
+    <%- include('nav-bar.ejs', {user:user}) %>
 
     <form action="/write" method="post">
         <div class="form-group">

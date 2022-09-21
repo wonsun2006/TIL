@@ -1,5 +1,6 @@
 const express = require('express');
 const MongoClient = require('mongodb').MongoClient;
+const passport = require('passport');
 
 const router = express.Router();
 
@@ -13,11 +14,15 @@ MongoClient.connect(process.env.DB_URL, (error, client)=>{
 });
 
 router.get('/login', (req,res)=>{
-    res.render('login.ejs');
+    if(req.user){
+        res.redirect('/');
+    }else{
+        res.render('login.ejs', {user:req.user});
+    }
 });
 
 router.get('/register-form', (req,res)=>{
-    res.render('register-form.ejs');
+    res.render('register-form.ejs', {user:req.user});
 });
 
 router.post('/register', (req,res)=>{
@@ -54,6 +59,27 @@ router.post('/register', (req,res)=>{
             
         });
     }
+});
+
+router.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login-fail'
+}), function(req, res){
+    console.log(req.user+' login success.');
+});
+
+router.get('/login-fail',(req,res)=>{
+    res.render('login-fail.ejs', {user:req.user});
+});
+
+router.get('/logout', function(req,res,next){
+    req.logout((err)=>{
+        if(err) next(err);
+        req.session.destroy(()=>{
+            res.redirect('/');
+          });
+        // res.redirect('/');
+    });
 });
 
 module.exports = router;

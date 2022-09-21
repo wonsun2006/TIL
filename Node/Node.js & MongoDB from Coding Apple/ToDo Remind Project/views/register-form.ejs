@@ -11,7 +11,7 @@
     <title>To Do List</title>
   </head>
   <body>
-    <%- include('nav-bar.html') %>
+    <%- include('nav-bar.ejs', {user:user}) %>
 
     <h1>회원가입</h1>
     <form action="/auth/register" method="post">

@@ -13,7 +13,17 @@
           <a class="nav-link" href="/list">List</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/auth/login">Login</a>
+          <%
+          if(user==undefined){
+          %>
+            <a class="nav-link" href="/auth/login">Login</a>
+          <%
+          }else{
+          %>
+            <a class="nav-link" href="/auth/logout">Logout</a>
+          <%
+          }
+          %>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">

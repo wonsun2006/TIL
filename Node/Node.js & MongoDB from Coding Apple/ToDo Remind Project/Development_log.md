@@ -458,3 +458,113 @@ router.post('/register', (req,res)=>{
 특히, 한글을 경고창에 띄울 때, UTF-8 인코딩이 안되는데, 그를 위한 처리를 html `<head>` 에 해주어야 한다.
 
 또한, res.write를 해버려서 res.redirect가 되지 않기에, javascript 함수로 redirect 했다.
+
+### 로그인 기능 구현
+
+로그인에 필요한 라우팅 기능을 먼저 추가한다.
+
+```
+router.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login-fail'
+}), function(req, res){
+    console.log(req.user+' login success.');
+});
+
+router.get('/login-fail',(req,res)=>{
+    res.render('login-fail.ejs');
+});
+
+```
+
+login-fail 은 말 그대로 로그인 실패시 리다이렉트할 페이지이다.
+
+/login 으로 POST 요청을 하는 코드를 볼 수 있는데, 여기서 passport.authenticate라는 함수가 있다.
+
+이는 id, password 등 받은 정보를 검증하는 함수이다.
+
+successRedirect, failureRedirect 는 각각 검증 성공/실패 시 리다이렉트하는 경로이다.
+
+이후, server.js 에서 passport 관련 구현을 진행할 것이다.
+
+```
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const crypto = require('crypto');
+const session = require('express-session');
+
+app.use(session({secret : '비밀코드(추후 수정 필요)', resave : true, saveUninitialized : false}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy({
+    usernameField: 'id',
+    passwordField: 'password',
+    session: true, // 로그인 후 세션 저장할지, 브라우저 종료되도 유지됨.
+    passReqToCallback: false, // 아이디 비번 말고도 다른 정보 검증 시
+  }, function (id, password, done) {
+    db.collection('login').findOne({ id: id }, function (error, result) {
+      if (error) return done(error);
+
+      if (!result) return done(null, false, { message: '존재하지않는 아이디입니다.' });
+      // 비밀번호 직접 비교시 보안 매우 약함 (암호화 필요)
+      if (password == result.pw) {
+        return done(null, result);
+      } else {
+        return done(null, false, { message: '비밀번호가 다릅니다.' });
+      }
+    })
+}));
+
+passport.serializeUser(function(user, done){
+    done(null,user.id);
+});
+
+passport.deserializeUser(function(id, done){
+    db.collection('login').findOne({id : id}, function(error, result){
+        done(null, result);
+    });
+})
+```
+
+코드가 조금 길긴 하지만 설명을 진행하겠다.
+
+passport를 이용하기 위해, 여러 모듈을 가져왔다.
+
+session은 세션을 이용하기 위해 session 객체를 만들어 사용해야 한다.
+
+이 과정에서 여러 옵션들이 있다.
+
+- secret : 암호화, 인증 등에 사용한는 비밀 키라고 보면 되고, 지금은 하드코딩으로 드러났지만, 추후 이를 감추는 코드가 필요할 것이다.
+- resave : session 데이터에 변동이 없어도 저장하는지 유무
+- saveUninitialized : session이 필요하지 않은 상황에도 저장하는지 유무
+
+이 부분은 passport 없이 session만 사용하는 경우도 있다.
+
+passport.use 함수로 LocalStrategy를 넘겨주는 것을 볼 수 있다.
+
+이것은 passport에서 검증 작업을 설정하는 것으로 보면 된다.
+
+usernameField, passwordField 는 form 태그 내 input 태그의 name이 username과 password가 아닌 경우, name을 지정하는 옵션이다.
+
+session 은 true/false를 지정할 수 있는데, 브라우저가 종료되어도 세션을 유지할지 여부를 정한다.
+
+passReqToCallback 는 username, password 외 다른 정보도 검증하는지 여부를 정한다.
+
+LocalStrategy의 두번째 인자로 콜백함수를 전달한다.
+
+이 함수의 파라미터로는 (id,pwd,done) 이 있고, id,pwd는 말그대로 id와 pwd 로서 입력 받은 데이터이고, done은 종료하기 위한 함수라고 보면 된다.
+
+- 에러 발생 시, `done(Error 객체)`
+
+- 검증 성공 시, `done(result)`
+
+- 검증 실패 시, `done(null, false, {message:"fail"})`
+
+마지막으로 passport.serializeUser, passport.deserializeUser 를 구현해야 한다.
+
+여기서도 콜백함수 인자로 (username, done) 을 받고, username은 말 그대로 username 데이터, done은 끝내는 함수이다.
+
+성공 시, `done(null, result)`를 실행하면 된다.
+
+세션이 생성되면, 이후에 request.user 에서 유저 정보가 저장되고, session이 있는 것을 확인할 수 있다.
