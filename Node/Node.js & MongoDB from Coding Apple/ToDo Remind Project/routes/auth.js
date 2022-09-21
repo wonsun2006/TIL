@@ -77,8 +77,7 @@ router.get('/logout', function(req,res,next){
         if(err) next(err);
         req.session.destroy(()=>{
             res.redirect('/');
-          });
-        // res.redirect('/');
+        });
     });
 });
 

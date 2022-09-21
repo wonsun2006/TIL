@@ -568,3 +568,60 @@ LocalStrategy의 두번째 인자로 콜백함수를 전달한다.
 성공 시, `done(null, result)`를 실행하면 된다.
 
 세션이 생성되면, 이후에 request.user 에서 유저 정보가 저장되고, session이 있는 것을 확인할 수 있다.
+
+### 로그아웃 기능 구현
+
+```
+router.get('/logout', function(req,res,next){
+    req.logout((err)=>{
+        if(err) next(err);
+        req.session.destroy(()=>{
+            res.redirect('/');
+          });
+    });
+});
+```
+
+request.user에 유저 정보가 담겨 있는데, 이를 제거하기 위해서는
+
+```
+request.logout((err)=>{
+    // 콜백함수
+})
+```
+
+만 하면 된다.
+
+request.user에 정보가 사라지는 모습을 볼 수 있다.
+
+로그아웃 이후는 root 경로로 리다이렉트하도록 구현하였다.
+
+### nav-bar 수정
+
+기존에 nav-bar.html로 하였으나, 편의를 위해 ejs로 바꾸었고, 로그인 여부에 따라 동적으로 변하도록 구현하였다.
+
+특히나, Login으로 되어있는 탭을 로그인 상태에서는 Logout으로 나오도록 바꾸려는 시도를 하였다.
+
+```
+<li class="nav-item">
+    <%
+    if(user==undefined){
+    %>
+        <a class="nav-link" href="/auth/login">Login</a>
+    <%
+    }else{
+    %>
+        <a class="nav-link" href="/auth/logout">Logout</a>
+    <%
+    }
+    %>
+</li>
+```
+
+스크립트를 활용하여 조건문을 걸었다.
+
+여기서 user라는 변수를 볼 수 있는데, 이는 server.js에서 render로 ejs를 불러올 때마다, user라는 변수에 request.user를 넘겨주었기 때문에 저런 코드가 등장하였다.
+
+`res.render('*.ejs', {user:req.user});`
+
+로그인을 하면, request.user가 선언되었을 것이고, 로그아웃 시, request.user는 없는 값이 되기 때문에 조건문으로 구현하였다.
