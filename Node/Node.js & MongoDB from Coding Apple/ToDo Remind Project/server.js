@@ -8,6 +8,7 @@ const LocalStrategy = require('passport-local');
 const crypto = require('crypto');
 const session = require('express-session');
 
+
 const authRouter = require('./routes/auth');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(session({secret : '비밀코드(추후 수정 필요)', resave : false, 
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use( express.static( "public" ) );
 app.use('/auth', authRouter);
 
 let db;
