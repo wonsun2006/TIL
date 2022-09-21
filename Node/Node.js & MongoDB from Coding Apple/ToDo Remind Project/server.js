@@ -69,14 +69,27 @@ app.get('/', (req, res)=>{
 });
 
 app.get('/list', (req, res)=>{
-    db.collection('post').find().toArray((error, result)=>{
-        res.render(
-            'list.ejs', 
-            { 
-                user:req.user,
-                posts : result
-             });
-    });
+    db.collection('post').aggregate([
+        {
+          $lookup:
+            {
+              from: "login",
+              localField: "작성자",
+              foreignField: "_id",
+              as: "user_inform"
+            }
+       }
+     ]).toArray((error,result)=>{
+        res.render('list.ejs',{user:req.user, posts:result});
+     });
+    // db.collection('post').find().toArray((error, result)=>{
+    //     res.render(
+    //         'list.ejs', 
+    //         { 
+    //             user: req.user,
+    //             posts: result
+    //         });
+    // });
 });
 
 app.get('/write-form', (req, res)=>{
