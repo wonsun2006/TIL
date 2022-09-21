@@ -63,6 +63,14 @@ passport.deserializeUser(function(id, done){
     });
 })
 
+function isLogin(req,res,next){
+    if(req.user){
+        next();
+    }else{
+        res.send('로그인이 안되어있습니다.')
+    }
+}
+
 
 app.get('/', (req, res)=>{
     res.render('index.ejs', {user:req.user});
@@ -80,8 +88,8 @@ app.get('/list', (req, res)=>{
             }
        }
      ]).toArray((error,result)=>{
-        res.render('list.ejs',{user:req.user, posts:result});
-     });
+        res.render('list.ejs', {user:req.user, posts:result});
+    });
     // db.collection('post').find().toArray((error, result)=>{
     //     res.render(
     //         'list.ejs', 
@@ -96,7 +104,7 @@ app.get('/write-form', (req, res)=>{
     res.render('write-form.ejs', {user:req.user});
 }); 
 
-app.post('/write', (req, res)=>{
+app.post('/write', isLogin, (req, res)=>{
     db.collection('counter').findOne({name: "게시물갯수"}, (error, result)=>{
         if(error){
             res.send('DB Data Error');
@@ -105,7 +113,7 @@ app.post('/write', (req, res)=>{
         todoData = {
             _id: result.totalPost+1,
             제목: req.body.title,
-            작성자: req.body.writer,
+            작성자: req.user._id,
             날짜: req.body.date
         }
 
@@ -127,12 +135,27 @@ app.post('/write', (req, res)=>{
 app.delete('/delete', (req, res)=>{
     const idToDelete = parseInt(req.body._id);
 
-    db.collection('post').deleteOne({_id : idToDelete},(error, result)=>{
+    let user_search_key = "";
+    if(req.user){
+        user_search_key = req.user._id;
+    }
+
+    db.collection('post').deleteOne({_id:idToDelete, 작성자:user_search_key},(error,result)=>{
         if(error){
-            alert('failed to delete todo');
+            res.send(error);
+        }else if(result.deletedCount==0){
+            res.send({message : 'no data'});
         }else{
-            res.status(200).send({message : '삭제 성공'});
+            res.status(200).send({message : 'success'});
         }
-    });
+    })
+
+    // db.collection('post').deleteOne({_id : idToDelete},(error, result)=>{
+    //     if(error){
+    //         alert('failed to delete todo');
+    //     }else{
+    //         res.status(200).send({message : '삭제 성공'});
+    //     }
+    // });
 })
 

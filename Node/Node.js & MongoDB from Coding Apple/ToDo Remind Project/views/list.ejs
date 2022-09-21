@@ -20,6 +20,8 @@
 
     <div class="list-group">
     <%
+    console.log(posts);
+
     for(let i = 0; i<posts.length; i++){
       %>
       <div class="list-group-item todo-card">
@@ -47,8 +49,13 @@
           url: "/delete",
           data: {_id : postId}
         }).done((result)=>{
-          console.log('deletion is done');
-          $(e.target).parents(".todo-card").fadeOut();
+          if(result.message=='no data'){
+            alert('작성자만 삭제할 수 있습니다.');
+          }else if(result.message=='success'){
+            $(e.target).parents(".todo-card").fadeOut();
+          }else{
+            alert(result);
+          }
         }).fail((xhr, textStatus, errorThrown)=>{
           console.log(errorThrown);
           alert('failed to delete todo');
