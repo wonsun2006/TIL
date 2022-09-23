@@ -57,6 +57,35 @@ function assertionFunc(x) {
     var temp = x;
     console.log(temp + 1);
 }
-narrowingFunc(1);
-narrowingFunc('1');
-assertionFunc('1');
+var noChangeObj = {
+    attr: "don't change please"
+};
+// noChangeObj.attr = 'change it!';
+// HTML 수정 시 주의점
+var changeInnerHTML = document.querySelector('#id');
+// let changeInnerHTML = document.querySelector('#id') as HTMLElement; // Assertion
+if (changeInnerHTML instanceof HTMLElement) { // use instanceof
+    changeInnerHTML.innerHTML = 'HTML Element';
+}
+if ((changeInnerHTML === null || changeInnerHTML === void 0 ? void 0 : changeInnerHTML.innerHTML) != undefined) { // use optional chaining
+    changeInnerHTML.innerHTML = 'using optional chaining';
+}
+if (changeInnerHTML != null) { // Narrowing
+    changeInnerHTML.innerHTML = 'Not null';
+}
+var aTag = document.querySelector('#link');
+// if (aTag instanceof HTMLElement) { // 에러 발생
+if (aTag instanceof HTMLAnchorElement) {
+    aTag.href = 'https://google.com';
+}
+// class 타입 지정
+var myClass = /** @class */ (function () {
+    function myClass(input) {
+        this.strData = input;
+    }
+    myClass.prototype.myFunc = function (input) {
+        console.log(input);
+    };
+    return myClass;
+}());
+// const myObj :MyObjType2 = {attr1:true} // 에러 발생

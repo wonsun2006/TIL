@@ -75,6 +75,74 @@ function assertionFunc(x:number|string):void{
     console.log(temp+1);
 }
 
-narrowingFunc(1);
-narrowingFunc('1');
-assertionFunc('1');
+// narrowingFunc(1);
+// narrowingFunc('1');
+// assertionFunc('1');
+
+// readonly Attribute
+
+type NoChangePls = {
+    readonly attr : string,
+}
+  
+let noChangeObj :NoChangePls = {
+attr: "don't change please"
+};
+  
+// noChangeObj.attr = 'change it!';
+
+// HTML 수정 시 주의점
+let changeInnerHTML = document.querySelector('#id');
+// let changeInnerHTML = document.querySelector('#id') as HTMLElement; // Assertion
+if (changeInnerHTML instanceof HTMLElement) { // use instanceof
+    changeInnerHTML.innerHTML = 'HTML Element'
+}
+if(changeInnerHTML?.innerHTML!=undefined){ // use optional chaining
+    changeInnerHTML.innerHTML = 'using optional chaining'
+}
+if(changeInnerHTML!=null){ // Narrowing
+    changeInnerHTML.innerHTML = 'Not null'
+}
+
+let aTag = document.querySelector('#link');
+// if (aTag instanceof HTMLElement) { // 에러 발생
+if (aTag instanceof HTMLAnchorElement) {
+  aTag.href = 'https://google.com' 
+}
+
+// class 타입 지정
+class myClass {
+    strData:string;
+    constructor (input: string){
+      this.strData = input;
+    }
+
+    myFunc(input: string):void{
+        console.log(input);
+    }
+  }
+
+// interface
+// type MyObjType = { attr1 : string, attr2 : number };
+
+interface MyObjType{
+    attr1 : string, 
+    attr2 : number
+}
+interface MyObjType{
+    attr3 : string,
+    // attr1 : number // 중복 에러
+}
+
+interface Parent {
+    dna :string,
+}
+interface Child extends Parent {
+    addition :string
+}
+
+// & 사용한 속성 중복 -> never type
+type MyObjType1 = { attr1 : string }
+type MyObjType2 = { attr1 : boolean } & MyObjType1 // 에러 발생은 안함
+
+// const myObj :MyObjType2 = {attr1:true} // 에러 발생

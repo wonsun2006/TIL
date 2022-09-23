@@ -279,3 +279,311 @@ Person이라는 object 형태의 타입을 지정하였다.
 하지만 이 값을 Person 타입으로 사용하고 싶을 경우, 타입을 변환해야 하기 때문에, 다음과 같이 Assertion을 진행한 것이다.
 
 주어진 데이터를 처리하고 T 타입으로 변경해주는 함수를 구현한 것이다.
+
+## readonly 속성
+
+만약 Object 값이 있는데, 그 속성을 변치 않게 하고 싶을 수가 있다.
+
+이런 경우, 사용할 수 있는 방법이 있다.
+
+```
+type NoChangePls = {
+  readonly attr : string,
+}
+
+let noChangeObj :NoChangePls = {
+  attr : 'don't change please'
+}
+
+noChangeObj.attr = 'change it!'
+```
+
+다음과 같이 readonly 속성을 주면, 누군가 그 속성을 변경하려 할 때, 에러가 발생한다.
+
+물론, 실행해보면 무시하고 실행된다. 
+
+TypeScript 는 단지 에디터 상으로만 에러를 표시한다. 주의하자.
+
+## Object 로 선언한 타입들 합치기
+
+```
+type ObjA = { a: number };
+type ObjB = { b: number };
+type ObjAB = ObjA & ObjB;
+```
+
+다음과 같이 ObjA 와 ObjB 라는 타입을 선언했는데, 두 타입을 합치고 싶다면,
+
+즉, 다음과 같은 타입을 만들고 싶다면,
+
+```
+{
+    a: number,
+    b: number
+}
+```
+
+& 연산자로 타입을 합칠 수 있다.
+
+위의 ObjAB가 그 기능을 사용한 예시이다.
+
+## 값이 아닌 타입을 비교하는 TypeScript
+```
+var data = {
+  name : 'kim'
+}
+
+function myFunc(a : 'kim') {
+
+}
+myFunc(data.name)
+```
+
+다음 코드에서 myFunc는 에러가 발생한다.
+
+myFunc에서 a는 'kim'이라는 타입을 갖기로 했는데, data.name은 'kim'이라는 값이지, 'kim'이라는 타입이 아니다.
+
+TypeScript는 값이 아닌 타입을 체크한다는 것을 기억하자.
+
+## 화살표 함수 활용
+
+arrow function으로도 타입을 지정할 수 있다.
+
+```
+type ArrowType = (a:number, b:string)=>boolean;
+```
+다음과 같이 arrow function 형태로 함수 형태의 타입을 선언할 수 있다.
+
+## HTML 값 사용 시 주의점
+
+### document.getElementById() 
+
+javascript 에서는 document.getElementById() 같이 특정 id나 class 등으로 HTML 요소를 찾을 수 있다.
+
+게다가 그 요소를 수정할 수도 있는데, TypeScript 사용 시, 몇가지 고려해야할 사항들이 있다.
+
+아래는 코딩애플의 예시를 참고하였다.
+```
+let 제목 = document.querySelector('#title');
+제목.innerHTML = '반갑소'
+```
+다음 코드에서는 에러가 발생한다.
+
+제목.innerHTML 이 union 타입이라고 나온다.
+
+보면 innerHTML의 타입은 Element | null 이라고 한다.
+
+이를 해결하기 위해서는 여러 해결책이 있다.
+
+1. Narrowing
+    ```
+    let 제목 = document.querySelector('#title');
+    if (제목 != null) {
+        제목.innerHTML = '반갑소'
+    }
+    ```
+    기존에 union type 에서 Narrowing 하듯 처리하면 된다.
+
+2. instanceof
+    ```
+    let 제목 = document.querySelector('#title');
+    if (제목 instanceof HTMLElement) {
+        제목.innerHTML = '반갑소'
+    }
+    ```
+
+    instanceof 는 왼쪽 피연산자가 오른쪽 피연산자를 기반으로 한 객체인지 true/false를 반환한다.
+
+    이를 통해 어떤 클래스를 갖는지 확인하는 조건문을 구현할 수 있다.
+
+3. Assertion
+    ```
+    let 제목 = document.querySelector('#title') as HTMLElement;
+    제목.innerHTML = '반갑소'
+    ```
+
+    기존에 Assertion을 하듯 구현하면 된다.
+
+    하지만, Assertion의 불안정한 특성 때문에 개인적으로 선호하지 않을 것 같다.
+
+4. optional chaining
+    ```
+    let 제목 = document.querySelector('#title');
+    if (제목?.innerHTML != undefined) {
+        제목.innerHTML = '반갑소'
+    }
+    ```
+
+    optional chaining 연산자라는 것이 있다.
+
+    `객체?.속성` 에서 '?' 가 그것이다.
+
+    이 ?의 의미는 객체가 존재하면 속성을 제대로 사용하고, 아니라면 undefined 를 반환한다는 의미이다.
+
+5. strict 설정 제거
+
+    이러한 null로 인한 에러들은 compile option에서 strictNullChecks 옵션을 true로 했기 때문이다.
+
+    null인 것을 특정 목적으로 사용하려 할 때, 오류로 감지하는 것이다.
+
+    이 설정을 false로 바꾸거나 제거하면, 위에서 발생한 에러들이 사라질 것이다.
+
+    하지만 그만큼 엄격한 타입 체킹이 안된다는 단점도 있을 것이다.
+
+5가지 방법들을 알아보았는데, 개인적인 생각으로는 Assertion이나 strict 설정 제거는 선호하지 않을 것 같다.
+
+이 두 방법은 상대적으로 자유로워지나, TypeScript로 얻게 되는 엄격한 타입 에러 체크라는 장점을 줄이는 듯 보이기 때문에 선호하지 않을 것 같다.
+
+만약 사용하게 된다면 기본적으로 Narrowing, instanceof 를 사용하고,
+
+가독성을 위해 optional chaining을 사용하게 될 것 같다.
+
+optional chaining의 경우, 어느 정도 자유로워지는 느낌이 들지만, 추후 사용해보며 단점을 알아가야 할 것 같다.
+
+### 태그의 속성 변경
+
+javascript를 통해 태그의 속성을 변경할 수도 있다.
+
+하지만, 그냥 instanceof HTMLElement를 하게 되면 에러가 발생할 수 있다.
+
+```
+let 링크 = document.querySelector('#link');
+if (링크 instanceof HTMLElement) {
+  링크.href = 'https://kakao.com' //에러남 ㅅㄱ
+}
+```
+이 코드는 link라는 id를 가진 a 태그를 선택하여 href 속성을 변경하는 코드이다.
+
+하지만 해당 코드는 링크.href 에서 에러가 발생한다.
+
+그 이유는 링크가 HTMLElement에 href 속성이 없다고 한다.
+
+HTMLElement를 HTMLAnchorElement로 변경하면 에러가 사라진다.
+
+이는 HTMLAnchorElement에 href 속성이 있기 때문이다.
+
+HTMLElement는 HTMLAnchorElement을 포함해 여러 종류의 HTML Element 클래스를 포함한다고 한다.
+
+각 클래스마다 속성도 다른 것이다.
+
+그렇기에 태그의 속성을 수정하기 위해서는 적합한 클래스를 찾는 것에 주의해야 한다.
+
+## class 타입 지정
+
+```
+class myClass {
+    strData:string;
+    constructor (input: string){
+      this.strData = input;
+    }
+
+    myFunc(input: string):void{
+        console.log(input);
+    }
+}
+```
+class 에서도 타입 지정이 들어간다.
+
+class 에서는 필드 값을 지정할 수 있는데, 위 예시에서는 strData가 필드 값이다.
+
+필드 값에도 타입 지정을 한 것을 볼 수 있다.
+
+class에는 constructor를 구현할 수 있는데, 그곳에도 타입 지정이 들어간다.
+
+함수 형태이다보니, parameter에 타입 지정이 되었는데, 반환값은 그렇지 않은 모습이다.
+
+이는 어차피 constructor가 object로 반환되니, 할 필요가 없어서 그렇다.
+
+그리고 myFunc라는 함수를 볼 수 있는데, 이는 prototype.myFunc를 지정한 것과 같은 효과를 지닌다.
+
+이것 또한 함수이기 때문에 타입 지정을 하였다. 
+
+## interface
+
+우리는 Object 속성마다 타입 지정하는 방법을 배웠다.
+
+```
+type MyObjType = { attr1 : string, attr2 : number };
+```
+그런데 Object를 타입 지정할 때, interface라는 것을 활용할 수 있다.
+
+```
+interface MyObjType{
+    attr1 : string, 
+    attr2 : number
+}
+```
+이 interface를 활용한 코드는 type으로 한 것과 유사하게 작동한다.
+
+```
+interface Parent {
+    dna :string,
+}
+interface Child extends Parent {
+    addition :string,
+}
+```
+interface의 장점은 type과 다르게 extends를 사용할 수 있다.
+
+위의 예시에서 Child는 Parent를 extends 하는데, 이렇게 되면 Child에 Parent의 dna 속성을 받아온다.
+
+extends 하는 interface에 찾고 있는 속성이 없으면 extends 되는 interface에서 그 속성을 찾는다고 보면 되며, 이는 extends를 계속하는 한 반복된다고 보면 된다.
+
+계속해서 extends 되는 interface를 찾는 것이다.
+
+또 하나 type과 interface 사이 차이점이라 한다면, type은 중복 선언이 안되고, interface는 가능하다.
+
+```
+type MyObjType = { attr1 : string, attr2 : number };
+type MyObjType = { attr3 : boolean}; // 에러 발생
+```
+
+```
+interface MyObjType{
+    attr1 : string, 
+    attr2 : number
+}
+interface MyObjType{
+    attr3 : boolean // 에러 없음
+}
+```
+type을 활용한 구현은 에러가 발생하고, interface를 활용한 구현은 에러가 발생하지 않는다.
+
+하지만 여기서 주의해야할 점은 속성의 중복 선언은 불가능하다는 점이다.
+
+```
+interface MyObjType{
+    attr1 : string, 
+    attr2 : number
+}
+interface MyObjType{
+    attr1 : boolean // 에러 발생
+}
+```
+여기서 보면 같은 interface에 같은 attr1 속성을 다른 타입으로 지정하였다.
+
+이렇게 지정하면 attr1을 string과 boolean을 동시에 만족해야 하기 때문에 말이 안된다.
+
+이런 관점에서 &도 확인해보자.
+
+```
+type MyObjType1 = { attr1 : string }
+type MyObjType2 = { attr1 : boolean } & MyObjType1
+
+const myObj :MyObjType2 = {attr1:true} // 에러 발생
+```
+
+다음은 예전에 배웠던 &를 활용한 구현이다.
+
+선언 시에는 MyObjType2에 에러가 발생하지 않는다. 
+
+속성의 이름이 같고, 타입이 다른데도 구현은 가능했다.
+
+string과 boolean을 동시에 만족하는 attr1를 선언해야하는 상황이 되었다.
+
+이 경우, 그 속성에 값을 선언할 때 에러가 발생한다.
+
+never 타입이라고 하며, 타입 체크를 해준다.
+
+&는 자유로워지지만 타입 체크에 약해지는 단점을 볼 수 있었다.
+
