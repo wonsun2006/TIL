@@ -625,3 +625,50 @@ request.user에 정보가 사라지는 모습을 볼 수 있다.
 `res.render('*.ejs', {user:req.user});`
 
 로그인을 하면, request.user가 선언되었을 것이고, 로그아웃 시, request.user는 없는 값이 되기 때문에 조건문으로 구현하였다.
+
+### TypeScript Node.js에 적용하기
+
+코딩애플 강의를 통해 TypeScript를 공부하였다.
+
+코딩애플 강의에서는 그저 TypeScript를 js파일로 컴파일 할 뿐, 실제 프로젝트에 적용하는 법은 아직 배우지 못했다.
+
+그렇기 때문에 현재 개발하고 있던 프로젝트에 TypeScript를 적용해보기로 했다.
+
+1. tsconfig.json 생성
+
+    TypeScript 프로젝트임을 알려주기 위해 tsconfig.json 파일을 만들고, 컴파일 옵션을 지정하였다.
+
+2. `npm install @types/node`\
+
+    이는 Node.js 타입을 추가하는 것이라고 한다.
+
+    TypeScript가 Node.js 에서 사용되는 타입을 추가하는 듯 하다.
+
+3. `npm install @types/express`
+
+    2번 과정과 같이 TypeScript에 express에 사용되는 타입을 추가하였다.
+
+4. `npm install ts-node`
+
+    ts-node 모듈도 필요하다고 하여 설치하였다.
+
+5. package.json 수정
+    ```
+    "scripts": {
+        "start": "nodemon --exec ts-node index.ts"
+    }
+    ```
+    다음과 같이 package.json 을 수정하고, start라는 키에 값을 넣는다.
+
+6. ts파일 생성
+
+    TypeScript로 작성할 파일을 생선한다.
+
+7. npm run start
+
+    npm run start 를 하면 컴파일이 된다.
+
+
+위의 과정을 진행하니, ts파일에 에러가 엄청나게 많이 발생했다.
+
+계속해서 개발하며 고쳐나가야 겠다.
