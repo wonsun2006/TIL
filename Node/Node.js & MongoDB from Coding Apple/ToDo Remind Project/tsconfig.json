@@ -1,8 +1,13 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "noImplicitAny": true,
-        "strictNullChecks": true
-    }
+        "strictNullChecks": true,
+        "moduleResolution": "node",
+        "rootDir": "./",
+        "outDir": "./build" 
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
 }

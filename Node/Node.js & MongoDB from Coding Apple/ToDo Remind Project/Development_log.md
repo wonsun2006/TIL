@@ -655,7 +655,8 @@ request.user에 정보가 사라지는 모습을 볼 수 있다.
 5. package.json 수정
     ```
     "scripts": {
-        "start": "nodemon --exec ts-node index.ts"
+        "start": "nodemon server.js",
+        "build": "tsc src/*.ts"
     }
     ```
     다음과 같이 package.json 을 수정하고, start라는 키에 값을 넣는다.

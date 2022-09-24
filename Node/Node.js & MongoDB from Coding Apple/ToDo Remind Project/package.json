@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@types/express": "^4.17.14",
-    "@types/node": "^18.7.19",
     "body-parser": "^1.20.0",
     "dotenv": "^16.0.2",
     "ejs": "^3.1.8",
@@ -13,10 +12,19 @@
     "mongodb": "^4.9.1",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "socket.io": "^4.5.2",
-    "ts-node": "^10.9.1"
+    "socket.io": "^4.5.2"
   },
   "scripts": {
-    "start": "nodemon --exec ts-node index.ts"
+    "start": "nodemon server.js",
+    "build": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/express-session": "^1.17.5",
+    "@types/method-override": "^0.0.32",
+    "@types/node": "^18.7.20",
+    "@types/passport": "^1.0.11",
+    "@types/passport-local": "^1.0.34",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3"
   }
 }

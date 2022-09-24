@@ -1,12 +1,23 @@
-const express = require('express');
-const MongoClient = require('mongodb').MongoClient;
-const bodyParser = require('body-parser');
-const methodOverride = require('method-override');
-require('dotenv').config();
-const passport = require('passport');
-const LocalStrategy = require('passport-local');
-const crypto = require('crypto');
-const session = require('express-session');
+import * as express from 'express'
+import { MongoClient, Db } from "mongodb";
+import * as bodyParser from 'body-parser';
+import * as methodOverride from 'method-override';
+import * as dotenv from 'dotenv';
+import * as passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import * as session from 'express-session';
+
+dotenv.config();
+// const express = require('express');
+// const MongoClient = require('mongodb').MongoClient;
+// const bodyParser = require('body-parser');
+// const methodOverride = require('method-override');
+// require('dotenv').config();
+// const passport = require('passport');
+// const LocalStrategy = require('passport-local');
+// // const crypto = require('crypto');
+// const session = require('express-session');
+
 
 
 const authRouter = require('./routes/auth');
@@ -23,25 +34,34 @@ app.use(passport.session());
 app.use( express.static( "public" ) );
 app.use('/auth', authRouter);
 
-let db;
+let db: Db;
 
-MongoClient.connect(process.env.DB_URL, (error, client)=>{
-    if (error) return console.log(error);
+if(process.env != undefined){
+    if(process.env.DB_URL != undefined){
+        MongoClient.connect(process.env.DB_URL, (error: Error | undefined, client: MongoClient)=>{
+            if (error) return console.log(error);
 
-    db = client.db('todoapp');
 
-    app.listen(process.env.PORT, ()=>{
-        console.log(`Connection on ${process.env.PORT}`);
-    });
-    
-});
+                db = client.db('todoapp');
+
+                app.listen(process.env.PORT, ()=>{
+                    console.log(`Connection on ${process.env.PORT}`);
+                });
+            
+        });
+    }else{
+        console.log('Cannot find DB_URL');
+    }
+}else{
+    console.log('There is no .env data');
+}
 
 passport.use(new LocalStrategy({
     usernameField: 'id',
     passwordField: 'password',
     session: true, // 로그인 후 세션 저장할지, 브라우저 종료되도 유지됨.
     passReqToCallback: false, // 아이디 비번 말고도 다른 정보 검증 시
-  }, function (id, password, done) {
+  }, function (id:string, password:string, done) {
     db.collection('login').findOne({ id: id }, function (error, result) {
       if (error) return done(error);
     
@@ -55,8 +75,11 @@ passport.use(new LocalStrategy({
     })
 }));
 
-passport.serializeUser(function(user, done){
-    done(null,user.id);
+passport.serializeUser(function(user: Express.User, done){
+    if(user?.id != undefined){
+        done(null, user.id);
+    }
+    
 });
 
 passport.deserializeUser(function(id, done){
