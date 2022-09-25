@@ -636,40 +636,86 @@ request.user에 정보가 사라지는 모습을 볼 수 있다.
 
 1. tsconfig.json 생성
 
-    TypeScript 프로젝트임을 알려주기 위해 tsconfig.json 파일을 만들고, 컴파일 옵션을 지정하였다.
+   TypeScript 프로젝트임을 알려주기 위해 tsconfig.json 파일을 만들고, 컴파일 옵션을 지정하였다.
 
 2. `npm install @types/node`\
 
-    이는 Node.js 타입을 추가하는 것이라고 한다.
+   이는 Node.js 타입을 추가하는 것이라고 한다.
 
-    TypeScript가 Node.js 에서 사용되는 타입을 추가하는 듯 하다.
+   TypeScript가 Node.js 에서 사용되는 타입을 추가하는 듯 하다.
 
 3. `npm install @types/express`
 
-    2번 과정과 같이 TypeScript에 express에 사용되는 타입을 추가하였다.
+   2번 과정과 같이 TypeScript에 express에 사용되는 타입을 추가하였다.
 
 4. `npm install ts-node`
 
-    ts-node 모듈도 필요하다고 하여 설치하였다.
+   ts-node 모듈도 필요하다고 하여 설치하였다.
 
 5. package.json 수정
-    ```
-    "scripts": {
-        "start": "nodemon server.js",
-        "build": "tsc src/*.ts"
-    }
-    ```
-    다음과 같이 package.json 을 수정하고, start라는 키에 값을 넣는다.
+
+   ```
+   "scripts": {
+       "start": "nodemon server.js",
+       "build": "tsc src/*.ts"
+   }
+   ```
+
+   다음과 같이 package.json 을 수정하고, start라는 키에 값을 넣는다.
 
 6. ts파일 생성
 
-    TypeScript로 작성할 파일을 생선한다.
+   TypeScript로 작성할 파일을 생선한다.
 
 7. npm run start
 
-    npm run start 를 하면 컴파일이 된다.
-
+   npm run start 를 하면 컴파일이 된다.
 
 위의 과정을 진행하니, ts파일에 에러가 엄청나게 많이 발생했다.
 
 계속해서 개발하며 고쳐나가야 겠다.
+
+### npm run {script} 에러
+
+빠른 TypeScript 컴파일을 위해서 package.json 에 scripts로 build 라는 스크립트를 넣었다.
+
+```
+"scripts": {
+    "build": "tsc -p ."
+}
+```
+
+하지만 어째서인지, `npm run build`를 하면
+
+    지정된 경로를 찾을 수 없습니다.
+    'MongoDB'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다.
+
+라는 에러가 출력되었고, 터미널에 직접 `tsc -p .` 를 똑같이 입력하면 정상적으로 작동하는 이상한 현상이 발생했다.
+
+이 에러를 분석하며 이상한 점은 'MongoDB'를 찾을 수 없었다는 점이다.
+
+mongodb 모듈을 server.ts에서 사용하기는 하였으나, 모두 소문자라는 점에서 'MongoDB'와 'mongodb'는 같다고 볼 수 없었다.
+
+그렇다면 이 'MongoDB'는 어디서 왔는가 해서 봤더니, 그것은 폴더 이름이었다.
+
+나의 프로젝트 폴더는
+
+/TIL/Node/Node.js & MongoDB from Coding Apple/ToDo Remind Project
+
+였다.
+
+여기서 유의해서 보아야 할 것은 Node.js & MongoDB from Coding Apple 부분이다.
+
+내가 찾고 있던 'MongoDB'가 여기서 왔음을 예상할 수 있었다.
+
+그렇다면 문제는 왜 발생했는가?
+
+기본적으로 npm run {script}를 하면 script의 내용을 터미널에 입력하여 실행하는 방식이다.
+
+그런데, cmd 에서 & 를 사용하면, 여러 명령어를 & 단위로 순서대로 실행한다.
+
+나의 폴더 이름 자체가 "Node.js & MongoDB from Coding Apple" 인데,
+
+cmd는 Node.js 와 MongoDB from Coding Apple 로 두개의 명령으로 해석한 것이다.
+
+나는 &와 같이 연산자를 폴더 이름에 사용하는 것은 위험하거나, 방해될 수 있다고 판단하여 폴더 이름을 "Node.js MongoDB from Coding Apple"로 바꾸었다.
