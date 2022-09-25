@@ -32,7 +32,7 @@
         <p class="mb-1">작성자: <%= posts[i].user_inform[0].id %></p>
         <div class="d-flex w-100 justify-content-between">
           <small>And some small print.</small>
-          <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">Delete</button>
+          <button class="btn btn-danger delete" data-id="<%= posts[i].id %>">Delete</button>
         </div>
       </div>
     <%
@@ -47,7 +47,7 @@
         $.ajax({
           method: "DELETE",
           url: "/delete",
-          data: {_id : postId}
+          data: {id : postId}
         }).done((result)=>{
           if(result.message=='no data'){
             alert('작성자만 삭제할 수 있습니다.');

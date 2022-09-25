@@ -1,5 +1,5 @@
 import * as express from 'express'
-import { MongoClient, Db } from "mongodb";
+import { MongoClient, Db, WithId, Document, ObjectId } from "mongodb";
 import * as bodyParser from 'body-parser';
 import * as methodOverride from 'method-override';
 import * as dotenv from 'dotenv';
@@ -8,19 +8,34 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import * as session from 'express-session';
 
 dotenv.config();
-// const express = require('express');
-// const MongoClient = require('mongodb').MongoClient;
-// const bodyParser = require('body-parser');
-// const methodOverride = require('method-override');
-// require('dotenv').config();
-// const passport = require('passport');
-// const LocalStrategy = require('passport-local');
-// // const crypto = require('crypto');
-// const session = require('express-session');
-
-
 
 const authRouter = require('./routes/auth');
+
+declare global {
+	namespace Express {
+        interface User{
+            _id: ObjectId,
+            id?:string,
+        }
+	}
+}
+
+interface LoginData extends WithId<Document> {
+    id: string;
+    pw: string;
+}
+
+interface ToDoData extends WithId<Document>{
+    id: number,
+    제목: string,
+    작성자: ObjectId,
+    날짜: Date
+}
+
+interface CounterData extends WithId<Document> {
+    totalPost: number,
+    name: string
+}
 
 const app = express();
 
@@ -40,7 +55,6 @@ if(process.env != undefined){
     if(process.env.DB_URL != undefined){
         MongoClient.connect(process.env.DB_URL, (error: Error | undefined, client: MongoClient)=>{
             if (error) return console.log(error);
-
 
                 db = client.db('todoapp');
 
@@ -82,14 +96,16 @@ passport.serializeUser(function(user: Express.User, done){
     
 });
 
-passport.deserializeUser(function(id, done){
-    db.collection('login').findOne({id : id}, function(error, result){
-        done(null, result);
+passport.deserializeUser(function(id: string, done){
+    db.collection('login').findOne({id : id}, function(error, result:LoginData|undefined){
+        if(result != undefined){
+            done(null, result);
+        }      
     });
 })
 
-function isLogin(req,res,next){
-    if(req.user){
+function isLogin(req: express.Request, res: express.Response, next: express.NextFunction){
+    if(req?.user){
         next();
     }else{
         res.send('로그인이 안되어있습니다.')
@@ -115,72 +131,62 @@ app.get('/list', (req, res)=>{
      ]).toArray((error,result)=>{
         res.render('list.ejs', {user:req.user, posts:result});
     });
-    // db.collection('post').find().toArray((error, result)=>{
-    //     res.render(
-    //         'list.ejs', 
-    //         { 
-    //             user: req.user,
-    //             posts: result
-    //         });
-    // });
 });
 
 app.get('/write-form', (req, res)=>{
     res.render('write-form.ejs', {user:req.user});
 }); 
 
-app.post('/write', isLogin, (req, res)=>{
-    db.collection('counter').findOne({name: "게시물갯수"}, (error, result)=>{
+app.post('/write', isLogin, (req: express.Request, res: express.Response)=>{
+    db.collection('counter').findOne({name: "게시물갯수"}, (error, result:CounterData)=>{
         if(error){
             res.send('DB Data Error');
         }
 
-        todoData = {
-            _id: result.totalPost+1,
-            제목: req.body.title,
-            작성자: req.user._id,
-            날짜: req.body.date
-        }
-
-        db.collection('post').insertOne(todoData, (error, result)=>{
-            if(error){
-                res.send('DB Data Error');
+        if(req.user != undefined){
+            const todoData : ToDoData = {
+                _id: new ObjectId,
+                id: result.totalPost + 1,
+                제목: req.body.title,
+                작성자: req.user._id,
+                날짜: req.body.date
             }
-
-            db.collection('counter').updateOne({name: "게시물갯수"},{$inc : {totalPost:1}},(error, result)=>{
+            db.collection('post').insertOne(todoData, (error, result)=>{
                 if(error){
                     res.send('DB Data Error');
                 }
-                res.redirect('/list');
+    
+                db.collection('counter').updateOne({name: "게시물갯수"},{$inc : {totalPost:1}},(error, result)=>{
+                    if(error){
+                        res.send('DB Data Error');
+                    }
+                    res.redirect('/list');
+                });
             });
-        });
+        }
     });
 });
 
 app.delete('/delete', (req, res)=>{
-    const idToDelete = parseInt(req.body._id);
+    const idToDelete = parseInt(req.body.id);
 
-    let user_search_key = "";
+    let user_search_key;
     if(req.user){
         user_search_key = req.user._id;
     }
 
-    db.collection('post').deleteOne({_id:idToDelete, 작성자:user_search_key},(error,result)=>{
+    db.collection('post').deleteOne({id:idToDelete, 작성자:user_search_key},(error,result)=>{
         if(error){
             res.send(error);
-        }else if(result.deletedCount==0){
-            res.send({message : 'no data'});
+        }else if(result != undefined){
+            if(result.deletedCount==0){
+                res.send({message : 'no data'});
+            }else{
+                res.status(200).send({message : 'success'});
+            }
         }else{
-            res.status(200).send({message : 'success'});
+            res.send('delete result is undefined');
         }
-    })
-
-    // db.collection('post').deleteOne({_id : idToDelete},(error, result)=>{
-    //     if(error){
-    //         alert('failed to delete todo');
-    //     }else{
-    //         res.status(200).send({message : '삭제 성공'});
-    //     }
-    // });
+    });
 })
 

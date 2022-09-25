@@ -459,6 +459,8 @@ router.post('/register', (req,res)=>{
 
 또한, res.write를 해버려서 res.redirect가 되지 않기에, javascript 함수로 redirect 했다.
 
+<br>
+
 ### 로그인 기능 구현
 
 로그인에 필요한 라우팅 기능을 먼저 추가한다.
@@ -569,6 +571,8 @@ LocalStrategy의 두번째 인자로 콜백함수를 전달한다.
 
 세션이 생성되면, 이후에 request.user 에서 유저 정보가 저장되고, session이 있는 것을 확인할 수 있다.
 
+<br>
+
 ### 로그아웃 기능 구현
 
 ```
@@ -595,6 +599,8 @@ request.logout((err)=>{
 request.user에 정보가 사라지는 모습을 볼 수 있다.
 
 로그아웃 이후는 root 경로로 리다이렉트하도록 구현하였다.
+
+<br>
 
 ### nav-bar 수정
 
@@ -625,6 +631,8 @@ request.user에 정보가 사라지는 모습을 볼 수 있다.
 `res.render('*.ejs', {user:req.user});`
 
 로그인을 하면, request.user가 선언되었을 것이고, 로그아웃 시, request.user는 없는 값이 되기 때문에 조건문으로 구현하였다.
+
+<br>
 
 ### TypeScript Node.js에 적용하기
 
@@ -675,6 +683,8 @@ request.user에 정보가 사라지는 모습을 볼 수 있다.
 
 계속해서 개발하며 고쳐나가야 겠다.
 
+<br>
+
 ### npm run {script} 에러
 
 빠른 TypeScript 컴파일을 위해서 package.json 에 scripts로 build 라는 스크립트를 넣었다.
@@ -719,3 +729,47 @@ mongodb 모듈을 server.ts에서 사용하기는 하였으나, 모두 소문자
 cmd는 Node.js 와 MongoDB from Coding Apple 로 두개의 명령으로 해석한 것이다.
 
 나는 &와 같이 연산자를 폴더 이름에 사용하는 것은 위험하거나, 방해될 수 있다고 판단하여 폴더 이름을 "Node.js MongoDB from Coding Apple"로 바꾸었다.
+
+### TypeScript interface 추가
+
+```
+declare global {
+	namespace Express {
+        interface User{
+            _id: ObjectId,
+            id?:string,
+        }
+	}
+}
+
+interface LoginData extends WithId<Document> {
+    id: string;
+    pw: string;
+}
+
+interface ToDoData extends WithId<Document>{
+    id: number,
+    제목: string,
+    작성자: ObjectId,
+    날짜: Date
+}
+
+interface CounterData extends WithId<Document> {
+    totalPost: number,
+    name: string
+}
+```
+
+MongoDB 사용 시, 특정 데이터를 다룰 때, collection에서 find 등을 사용한다.
+
+그리고 나서 콜백 함수를 통해, 찾은 데이터를 다룬다.
+
+여기서 콜백 함수의 두번째 인자가 WithId\<Document\> 타입임을 확인했다.
+
+하지만, 그냥 사용하게 되면, 구현 시 사용한 데이터의 속성들을 활용할 수 없다.
+
+그렇기 때문에 interface로 WithId\<Documnet\>를 extend 하여 구조를 지정해주어야 한다.
+
+또한 Request.User에는 id라는 속성이 기본적으로 구현되어 있지 않기 때문에 declare, namespace, interface를 사용하여 구현하였다.
+
+declare는 간단히 말하면, 이미 어딘가에 선언되어 있다는 의미이며, 컴파일되지 않는다.
