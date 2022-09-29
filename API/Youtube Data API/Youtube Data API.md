@@ -97,3 +97,95 @@ axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet&myRating=li
 추후, OAuth 2 인증 기능을 구현할 필요가 있을 것으로 보인다.
 
 참고로, API key로는 가장 유명한 영상들 등 개인 사용자와 무관한 데이터는 접근할 수 있는 것으로 보인다.
+
+## OAuth2 인증
+
+Youtube Data API의 일부 기능은 OAuth2 인증이 필요하다.
+
+Google에서는 서버 사이드에서 OAuth2를 요청하고 사용할 방법을 안내한다.
+
+https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
+
+1. 액세스 토큰 받기
+
+   여러 파라미터와 함께 `https://accounts.google.com/o/oauth2/auth`
+
+   로 GET 요청을 해야한다.
+
+   필수 파라미터는
+
+   client_id, redirect_uri, response_type, scope 가 있으며 다음과 같이 GET 요청을 했다.
+
+   ```
+       res.redirect(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.CLIENT_ID}&redirect_uri=http://localhost:8080/oauth2callback&scope=https://www.googleapis.com/auth/youtube&response_type=code`);
+
+   ```
+
+   - client_id: Google Cloud에 만든 애플리케이션에서 OAuth 2.0 클라이언트 ID의 ID 데이터
+   - redirect_uri: 결과 데이터를 보내줄 URI (리다이렉트 됨)
+
+   redirect URI는 Google Cloud OAuth 2.0 클라이언트 ID 설정에서 승인된 리디렉션 URI로 등록해야 작동한다.
+
+   - scope: 권한 요청할 범위 (공식 문서에 정리되어 있으니 참고)
+   - response_type: 응답 데이터 형식 (code, token 등이 있다. 공식 문서 참고)
+
+   그 결과로 권한 요청 페이지로 이동한다.
+
+2. 사용자 동의 결정
+
+   권한 요청 페이지에서 권한을 허용하면 이전에 설정했던 redirect_uri로 데이터를 전달한다.
+
+3. Google의 응답 처리
+
+   위에서 code 형태 데이터를 요청했으니 code 형태의 데이터를 받을 것이다.
+
+   이 code는 token으로 교환할 수 있는 code이다.
+
+   GET 방식의 파라미터로 전달이 되며, code라는 key로 전달 받는다.
+
+   그렇기에 request.query.code로 이후 활용하면 된다.
+
+4. 인증 코드를 갱신 토큰 및 액세스 토큰으로 교환
+
+   이후 code 데이터, 여러 파라미터와 함께 `https://accounts.google.com/o/oauth2/token`으로 토큰을 요청할 수 있다.
+
+   - code: 3단계에서 Google이 redirect_uri로 반환한 인증 코드입니다.
+   - client_id: 애플리케이션의 OAuth 2.0 클라이언트 ID로, 이 값은 Google APIs console에 표시됩니다.
+   - client_secret: 클라이언트 ID와 연결된 클라이언트 비밀번호로, 이 값은 Google APIs console에 표시됩니다.
+   - redirect_uri: 클라이언트 ID에 대해 등록된 redirect_uri입니다.
+   - grant_type: 이 값은 authorization_code로 설정합니다.
+
+   위의 파라미터들과 함께 해당 URI로 POST 요청 하면 된다.
+
+   Axios로 구현하게 되면
+
+   ```
+   axios.post('https://accounts.google.com/o/oauth2/token',{
+           code: req.query.code,
+           client_id: process.env.CLIENT_ID,
+           client_secret: process.env.CLIENT_PW,
+           redirect_uri:`http://localhost:${process.env.PORT}/oauth2callback`,
+           grant_type:'authorization_code'
+       }).then(function(response:AxiosResponse){
+           console.log(response.data);
+       }).catch(function(error){
+           console.log(error);
+       });
+   ```
+
+   결과도 정상적으로 출력되며, 이제서야 token을 얻게 되며, 이제 token을 이용한 개인 데이터에 접근할 수 있다.
+
+   5. 응답 처리 및 토큰 저장
+
+   사실상 여기서 설명할 것은 크지 않다.
+
+   받은 데이터를 잘 저장하면 되며, 형식은 다음과 같다.
+
+   ```
+    {
+        "access_token" : 토큰 값,
+        "token_type" : "Bearer",
+        "expires_in" : 3600,
+        "refresh_token" : 리프레시 토큰 값
+    }
+   ```
