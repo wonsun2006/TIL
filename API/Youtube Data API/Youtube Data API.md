@@ -189,3 +189,47 @@ https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
         "refresh_token" : 리프레시 토큰 값
     }
    ```
+
+## Token을 이용한 데이터 불러오기
+
+Token을 받았으니, Token을 이용해 데이터를 받아와야 한다.
+
+데이터를 받는 방법은 간단하다.
+
+Youtube Data API 공식 문서에 따라 GET방식으로 특정 파라미터와 헤더를 보내면 된다.
+
+좋아요를 누른 비디오를 찾는 예시를 보자면,
+
+    URI는 `https://www.googleapis.com/youtube/v3/videos`이고, 필수 파라미터는 "part"라고 한다.
+
+    기본적으로는 OAuth 인증이 필요하지 않지만, 특정 요구를 추가하게 되면 인증이 필요하다.
+
+    좋아요를 누른 비디오 데이터가 그 예시가 된다.
+
+    파라미터들 중에 "myRating"가 있는데, 인증이 필요하며, "like", "dislike"로 설정할 수 있다.
+
+    인증했음을 알리는 것이 토큰이고, 이는 header에 Authorization : "Bearer 토큰값"로 설정해서 보내면 된다.
+
+    방식은 여러 가지가 있겠지만 Axios를 활용할 수 있겠다.
+
+```
+axios.get('https://www.googleapis.com/youtube/v3/videos', {
+        params: {
+            part: 'snippet',
+            myRating: 'like',
+            maxResults: 25
+        },
+        headers: {
+            Authorization: `Bearer ${user_token}`
+        }
+    }).then(function (response) {
+        console.log(response.data.items);
+    }).catch(function (error) {
+        console.log(error);
+    });
+```
+
+결과를 보면 성공적으로 데이터를 불러온다.
+
+response로 전체 데이터가 오고, 요구사항에 따라 데이터를 골라 사용하면 될 것이다.
+
