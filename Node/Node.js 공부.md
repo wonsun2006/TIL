@@ -81,3 +81,33 @@ googleRouter.get('/callback', passport.authenticate('google', {
 GET 방식으로 구글 인증을 요청하면 된다.
 
 여기서 scope 설정에 따라 사용하려는 특정이 허용/제한 될 수 있다.
+
+## Passport deserializeUser 호출 안되는 이슈
+
+Passport 에서 serializeUser, deserializeUser 함수가 있다.
+
+인증을 마치고 인증 데이터를 저장하기 위해 거치게 되는 함수들이다.
+
+- serializeUser : 세션을 생성, 인증 데이터를 저장.
+- deserializeUser : request.user 객체에 인증 데이터 저장.
+
+하지만, deserializeUser 가 호출되지 않으며, request.user 객체에 데이터가 저장되지 않는 현상이 발견되었다.
+
+결론적으로 session 설정 시, `cookie:{secure:true}` 가 문제였다.
+
+```
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  }))
+```
+
+secure 속성을 false로 바꾸어주니 바로 해결되었다.
+
+더 자세하게 알아보니, cookie의 secure 속성은 https 방식일 때만 쿠키 데이터를 넘긴다는 옵션이었다.
+
+문제가 발생한 프로젝트에서는 계속 http://localhost/ 기준으로 사용하였기에, 세션에서 쿠키 데이터를 넘기지 않았던 것이다.
+
+암호화 등 보안적으로 더 안전하다고 하는 https 방식으로 하는 것이 좋겠지만, 현 상황에서는 개발 단계이기 때문에 추후 수정할 것을 기약하며, http 방식으로 진행하였다.
