@@ -170,3 +170,7 @@ connection.end();
    다시 같은 Connection 객체를 connect하려 해도 실패하고, 새로 createConnection 함수를 불러와야만 사용할 수 있었다.
 
    end 함수는 Connection을 완전히 종료하는 듯 보인다.
+
+추가적으로, createConnection이나 end는 쿼리를 매번 실행할 때마다 호출하기보다는 앱이 시작, 종료될 때 한 번씩 사용하는 것을 권한다고 한다.
+
+연결을 맺는 것은 시작과 끝이고, 모든 쿼리를 끝낸 뒤, 앱이 종료될 때 DB 연결도 종료하는 흐름이 더 나은 듯하다.
