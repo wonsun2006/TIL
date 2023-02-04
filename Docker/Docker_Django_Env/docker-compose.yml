@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+
+    # 실시간 업데이트 호스트, 컨테이너 사이 앱을 연결한다.
+    volumes:
+      - ./app:/usr/src/app
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
